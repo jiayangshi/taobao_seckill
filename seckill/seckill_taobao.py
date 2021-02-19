@@ -8,8 +8,11 @@ import platform
 from time import sleep
 from random import choice
 from datetime import datetime
+from datetime import date
+from datetime import timedelta
 
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 from selenium.common.exceptions import WebDriverException
 
 import seckill.settings as utils_settings
@@ -48,6 +51,7 @@ class ChromeDrive:
         self.seckill_time = seckill_time
         self.seckill_time_obj = datetime.strptime(self.seckill_time, '%Y-%m-%d %H:%M:%S')
         self.password = password
+        self.login()
 
     def start_driver(self):
         try:
@@ -111,7 +115,7 @@ class ChromeDrive:
                 continue
 
     def keep_wait(self):
-        self.login()
+        #self.login()
         print("等待到点抢购...")
         while True:
             current_time = datetime.now()
@@ -158,18 +162,22 @@ class ChromeDrive:
                         click_submit_times = 0
                         while True:
                             try:
-                                if click_submit_times < 10:
+                                if click_submit_times < 20:
                                     self.driver.find_element_by_link_text('提交订单').click()
                                     print("已经点击提交订单按钮")
                                     submit_succ = True
                                     break
                                 else:
                                     print("提交订单失败...")
+                                    if (datetime.now()-self.seckill_time_obj).seconds>60:
+                                        break
                             except Exception as e:
 
                                 print("没发现提交按钮, 页面未加载, 重试...")
                                 click_submit_times = click_submit_times + 1
                                 sleep(0.1)
+                                if (datetime.now() - self.seckill_time_obj).seconds > 60:
+                                    break
                 except Exception as e:
                     print(e)
                     print("临时写的脚本, 可能出了点问题!!!")
@@ -178,6 +186,14 @@ class ChromeDrive:
         if submit_succ:
             if self.password:
                 self.pay()
+        else:
+            self.update()
+            self.keep_wait()
+
+    def update(self):
+        tomorrow= date.today() + timedelta(days=1)
+        self.seckill_time = str(tomorrow)+' '+"19:59:59"
+        self.seckill_time_obj = datetime.strptime(self.seckill_time, '%Y-%m-%d %H:%M:%S')
 
 
     def pay(self):
