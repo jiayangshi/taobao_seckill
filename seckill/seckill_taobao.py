@@ -119,10 +119,13 @@ class ChromeDrive:
         print("等待到点抢购...")
         while True:
             current_time = datetime.now()
-            if (self.seckill_time_obj - current_time).seconds > 180:
-                self.driver.get("https://cart.taobao.com/cart.htm")
-                print("每分钟刷新一次界面，防止登录超时...")
-                sleep(60)
+            if (current_time - self.seckill_time_obj).seconds > 600:
+                try:
+                    self.driver.get("https://cart.taobao.com/cart.htm")
+                except Exception as e:
+                    pass
+                print("每5分钟刷新一次界面，防止登录超时...")
+                sleep(300)
             else:
                 self.get_cookie()
                 print("抢购时间点将近，停止自动刷新，准备进入抢购阶段...")
